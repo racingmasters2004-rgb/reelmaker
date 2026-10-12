@@ -8,25 +8,25 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Typeface
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.system.exitProcess
 
-/** Saves any crash to a file, then ends the process. */
-class ReelApp : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        Thread.setDefaultUncaughtExceptionHandler { _, e ->
-            try {
-                File(filesDir, "crash.txt").writeText(android.util.Log.getStackTraceString(e).take(12000))
-            } catch (_: Throwable) {
-            }
-            android.os.Process.killProcess(android.os.Process.myPid())
-            exitProcess(10)
+object Crumbs {
+    fun add(ctx: Context, s: String) {
+        try {
+            val f = File(ctx.filesDir, "crumbs.txt")
+            if (f.exists() && f.length() > 20000) f.delete()
+            f.appendText((System.currentTimeMillis() % 1000000).toString() + " " + s + "\n")
+        } catch (_: Throwable) {
         }
     }
 }
